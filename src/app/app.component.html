@@ -1,0 +1,25 @@
+<div class="tw-flex tw-flex-col tw-min-h-screen">
+  <!-- Header: Command center of our application -->
+  <header class="tw-bg-gray-900 tw-text-white tw-p-4 tw-shadow-md">
+    <div class="tw-container tw-mx-auto tw-flex tw-justify-between tw-items-center">
+      <h1 class="tw-text-xl tw-font-bold">{{ title }}</h1>
+      <nav>
+        <!-- Navigation will be added in a future episode -->
+        <!-- The Inevitable Refactor looms on the horizon -->
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main content area: Where the magic happens -->
+  <main class="tw-container tw-mx-auto tw-flex-grow tw-p-4">
+    <!-- Router outlet: A portal to other dimensions (components) -->
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer: Every good application needs a footer -->
+  <footer class="tw-bg-gray-900 tw-text-white tw-p-4 tw-mt-auto">
+    <div class="tw-container tw-mx-auto tw-text-center">
+      <p>© {{ getCurrentYear() }} Galactic Archives | Built with Angular by the Rebel Alliance</p>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,8 @@
+// App shell styles
+// Most styling is handled by Tailwind CSS with tw- prefix
+
+// Custom styles for elements that need specific styling beyond Tailwind
+:host {
+  display: block;
+  height: 100%;
+}
