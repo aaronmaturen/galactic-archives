@@ -14,5 +14,8 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "eslint.validate": ["typescript", "html"],
-  "prettier.documentSelectors": ["**/*.{ts,js,html,scss,css,json,md}"]
+  "prettier.documentSelectors": ["**/*.{ts,js,html,scss,css,json,md}"],
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always"
 }

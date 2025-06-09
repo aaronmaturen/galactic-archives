@@ -1,29 +1,40 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [
+        RouterTestingModule,
+        AppComponent, // Import the standalone component directly
+      ],
     }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 
-  it(`should have the 'galactic-archives' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('galactic-archives');
+  it(`should have the correct title`, () => {
+    expect(component.title).toEqual('Galactic Archives');
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
+  it('should render title in header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, galactic-archives');
+    expect(compiled.querySelector('header h1')?.textContent).toContain('Galactic Archives');
+  });
+
+  it('should have the current year in the footer', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const currentYear = new Date().getFullYear().toString();
+    expect(compiled.querySelector('footer')?.textContent).toContain(currentYear);
   });
 });
