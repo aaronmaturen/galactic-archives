@@ -4,8 +4,12 @@
     <div class="tw-container tw-mx-auto tw-flex tw-justify-between tw-items-center">
       <h1 class="tw-text-xl tw-font-bold">{{ title }}</h1>
       <nav>
-        <!-- Navigation will be added in a future episode -->
-        <!-- The Inevitable Refactor looms on the horizon -->
+        <ul class="tw-flex tw-space-x-4">
+          <li><a routerLink="/home" class="tw-text-white tw-hover:text-gray-300">Home</a></li>
+          <li>
+            <a routerLink="/characters" class="tw-text-white tw-hover:text-gray-300">Characters</a>
+          </li>
+        </ul>
       </nav>
     </div>
   </header>
