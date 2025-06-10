@@ -5,8 +5,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { merge } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StarWarsService } from '../../../../core/services/star-wars.service';
 import { Character } from '../../../../models/character.model';
 import { Subscription } from 'rxjs';
@@ -22,12 +25,40 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
   ],
   template: `
     <div class="tw-container tw-mx-auto tw-p-4">
       <h1 data-testid="character-list-heading" class="tw-text-2xl tw-font-bold tw-mb-4">
         Galactic Archives: Character Database
       </h1>
+
+      <!-- Search input with debounce -->
+      <div class="tw-mb-4">
+        <mat-form-field class="tw-w-full">
+          <mat-label>Search Characters</mat-label>
+          <input
+            matInput
+            [formControl]="searchControl"
+            placeholder="Search by name, gender, etc."
+            aria-label="Search characters"
+            data-testid="search-input"
+          />
+          <mat-icon matPrefix class="tw-mr-2 tw-text-yellow-400">search</mat-icon>
+          <button
+            *ngIf="searchControl.value"
+            matSuffix
+            mat-icon-button
+            aria-label="Clear search"
+            (click)="clearSearch()"
+            data-testid="clear-search-button"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
 
       <!-- Loading indicator -->
       <div *ngIf="loading && !characters.length" class="tw-flex tw-justify-center tw-my-8">
@@ -175,6 +206,7 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
   loading = false;
   error = '';
   totalCount = 0;
+  searchControl = new FormControl('');
 
   // References to the paginator and sort in our template
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -208,6 +240,22 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
       this.dataSource.count$.subscribe(count => {
         this.totalCount = count;
       })
+    );
+
+    // Set up search with debouncing
+    this.subscription.add(
+      this.searchControl.valueChanges
+        .pipe(
+          debounceTime(300), // Wait 300ms after the last event before emitting
+          distinctUntilChanged(), // Only emit if value has changed
+          tap(() => {
+            if (this.paginator) {
+              this.paginator.pageIndex = 0; // Reset to first page on new search
+            }
+            this.loadCharacters();
+          })
+        )
+        .subscribe()
     );
 
     // Initial data load - start with page 1 and current page size
@@ -260,10 +308,20 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
     try {
       // Update the page size if it changed
       this.pageSize = pageSize;
-      // Let the DataSource handle loading the data with sort parameters
-      this.dataSource.loadCharacters(page, sortField, sortDirection, pageSize);
+      // Get the search term if any
+      const searchTerm = this.searchControl.value || '';
+      // Let the DataSource handle loading the data with sort parameters and search term
+      this.dataSource.loadCharacters(page, sortField, sortDirection, pageSize, searchTerm);
     } catch (error) {
       this.error = `Failed to load characters: ${error instanceof Error ? error.message : 'Unknown error'}. The Cosmic Compiler is displeased.`;
     }
+  }
+
+  /**
+   * Clear the search input and reload characters
+   */
+  clearSearch(): void {
+    this.searchControl.setValue('');
+    // The valueChanges subscription will trigger a reload
   }
 }

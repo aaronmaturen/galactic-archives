@@ -9,44 +9,83 @@ import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { Sort, MatSort } from '@angular/material/sort';
 import { environment } from '../../../../../environments/environment';
 import { Subject } from 'rxjs';
+// import { By } from '@angular/platform-browser';
 
 describe('CharacterListComponent', () => {
+  const mockCharacterResponse = {
+    message: 'ok',
+    total_records: 82,
+    total_pages: 9,
+    previous: null,
+    next: 'https://www.swapi.tech/api/people?page=2&limit=10',
+    results: [
+      {
+        uid: '1',
+        name: 'Luke Skywalker',
+        url: 'https://www.swapi.tech/api/people/1',
+        properties: {
+          name: 'Luke Skywalker',
+          height: '172',
+          mass: '77',
+          hair_color: 'blond',
+          skin_color: 'fair',
+          eye_color: 'blue',
+          birth_year: '19BBY',
+          gender: 'male',
+          homeworld: 'https://www.swapi.tech/api/planets/1',
+          created: '2020-09-17T06:49:05.235Z',
+          edited: '2020-09-17T06:49:05.235Z',
+          url: 'https://www.swapi.tech/api/people/1',
+        },
+        description: 'A person within the Star Wars universe',
+      },
+    ],
+  };
+
+  const mockSearchResponse = {
+    message: 'ok',
+    total_records: 1,
+    total_pages: 1,
+    previous: null,
+    next: null,
+    results: [
+      {
+        uid: '5',
+        name: 'Leia Organa',
+        url: 'https://www.swapi.tech/api/people/5',
+        properties: {
+          name: 'Leia Organa',
+          height: '150',
+          mass: '49',
+          hair_color: 'brown',
+          skin_color: 'light',
+          eye_color: 'brown',
+          birth_year: '19BBY',
+          gender: 'female',
+          homeworld: 'https://www.swapi.tech/api/planets/2',
+          created: '2020-09-17T06:49:05.235Z',
+          edited: '2020-09-17T06:49:05.235Z',
+          url: 'https://www.swapi.tech/api/people/5',
+        },
+        description: 'A person within the Star Wars universe',
+      },
+    ],
+  };
   let component: CharacterListComponent;
   let fixture: ComponentFixture<CharacterListComponent>;
 
   beforeEach(async () => {
     // Setup MSW to intercept API requests
     server.use(
-      http.get(`${environment.apiUrl}people`, () => {
-        return HttpResponse.json({
-          message: 'ok',
-          total_records: 82,
-          total_pages: 9,
-          previous: null,
-          next: 'https://www.swapi.tech/api/people?page=2&limit=10',
-          results: [
-            {
-              uid: '1',
-              name: 'Luke Skywalker',
-              url: 'https://www.swapi.tech/api/people/1',
-              properties: {
-                name: 'Luke Skywalker',
-                height: '172',
-                mass: '77',
-                hair_color: 'blond',
-                skin_color: 'fair',
-                eye_color: 'blue',
-                birth_year: '19BBY',
-                gender: 'male',
-                homeworld: 'https://www.swapi.tech/api/planets/1',
-                created: '2020-09-17T06:49:05.235Z',
-                edited: '2020-09-17T06:49:05.235Z',
-                url: 'https://www.swapi.tech/api/people/1',
-              },
-              description: 'A person within the Star Wars universe',
-            },
-          ],
-        });
+      http.get(`${environment.apiUrl}people`, ({ request }) => {
+        const url = new URL(request.url);
+        const searchTerm = url.searchParams.get('name');
+
+        if (searchTerm === 'Leia') {
+          return HttpResponse.json(mockSearchResponse);
+        }
+
+        return HttpResponse.json(mockCharacterResponse);
       })
     );
 
@@ -283,5 +322,54 @@ describe('CharacterListComponent', () => {
 
     // Verify component's loadCharacters was called with correct parameters
     expect(loadCharactersSpy).toHaveBeenCalledWith(1, 10, 'name', 'asc');
+  });
+
+  it('should pass search term to dataSource', () => {
+    // Create a spy on the dataSource's loadCharacters method
+    const dataSourceSpy = jest.spyOn(component['dataSource'], 'loadCharacters');
+
+    // Set the search term
+    component.searchControl.setValue('Leia');
+
+    // Call the component's loadCharacters method
+    component.loadCharacters(1, 10, '', '');
+
+    // Verify dataSource's loadCharacters was called with the search term
+    expect(dataSourceSpy).toHaveBeenCalledWith(1, '', '', 10, 'Leia');
+  });
+
+  it('should reset pagination index when search term changes', () => {
+    // Mock the paginator
+    component.paginator = {
+      pageIndex: 2,
+      pageSize: 10,
+      page: new Subject(),
+      firstPage: jest.fn(),
+    } as unknown as MatPaginator;
+
+    // Simulate what happens in the valueChanges subscription
+    if (component.paginator) {
+      component.paginator.pageIndex = 0;
+    }
+
+    // Verify paginator was reset to first page
+    expect(component.paginator.pageIndex).toBe(0);
+  });
+
+  it('should clear search when clear button is clicked', () => {
+    // Set initial search term
+    component.searchControl.setValue('Vader');
+
+    // Setup a spy on setValue to verify it's called with empty string
+    const setValueSpy = jest.spyOn(component.searchControl, 'setValue');
+
+    // Call clearSearch method
+    component.clearSearch();
+
+    // Verify search control setValue was called with empty string
+    expect(setValueSpy).toHaveBeenCalledWith('');
+
+    // Verify search was cleared
+    expect(component.searchControl.value).toBe('');
   });
 });

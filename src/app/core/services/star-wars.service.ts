@@ -49,11 +49,33 @@ export class StarWarsService {
     );
   }
 
-  // Search for characters by name
-  searchCharacters(name: string): Observable<CharacterResponse> {
-    return this.http
-      .get<CharacterResponse>(`${this.apiUrl}people?name=${name}`)
-      .pipe(retry(2), catchError(this.handleError));
+  /**
+   * Search for characters by name with optional pagination and sorting
+   * @param searchTerm The search term to filter by
+   * @param page Optional page number (1-based)
+   * @param pageSize Optional page size
+   * @param sortField Optional field to sort by
+   * @param sortDirection Optional sort direction
+   * @returns Observable of CharacterResponse
+   */
+  searchCharacters(
+    searchTerm: string,
+    page: number = 1,
+    pageSize: number = 10,
+    sortField: string = '',
+    sortDirection: string = ''
+  ): Observable<CharacterResponse> {
+    // Build the URL with search, pagination and optional sorting parameters
+    let url = `${this.apiUrl}people?name=${encodeURIComponent(searchTerm)}&page=${page}&limit=${pageSize}&expanded=true`;
+
+    // Add sorting parameters if provided
+    if (sortField && sortDirection) {
+      url += `&sort_by=${sortField}&sort_direction=${sortDirection}`;
+    }
+
+    console.log(`API Search Request URL: ${url}`);
+
+    return this.http.get<CharacterResponse>(url).pipe(retry(2), catchError(this.handleError));
   }
 
   // Error handler that prevents Schrödinger's Bugs from collapsing our application

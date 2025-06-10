@@ -1,4 +1,4 @@
-import { ApiResponse, ApiDetailResponse } from './api-response.model';
+import { ApiResponse, ApiDetailResponse, ApiSearchResponse } from './api-response.model';
 
 // Character list item in results array
 export interface CharacterListItem {
@@ -29,5 +29,7 @@ export interface Character {
 }
 
 // Export type aliases for our specific use cases
-export type CharacterResponse = ApiResponse<CharacterListItem>;
+export type CharacterResponse =
+  | ApiResponse<CharacterListItem>
+  | ApiSearchResponse<CharacterListItem>;
 export type CharacterDetailResponse = ApiDetailResponse<Character>;

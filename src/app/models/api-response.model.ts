@@ -7,6 +7,13 @@ export interface ApiResponse<T> {
   results: T[];
 }
 
+export interface ApiSearchResponse<T> {
+  message: string;
+  result: T[];
+  apiVersion?: string;
+  timestamp?: string;
+}
+
 export interface ApiDetailResponse<T> {
   message: string;
   result: {

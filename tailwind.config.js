@@ -2,7 +2,7 @@
 module.exports = {
   prefix: 'tw-', // The Galactic Standards Committee requires prefixing to avoid conflicts
   content: [
-    "./src/**/*.{html,ts}", // Scan all our HTML and TypeScript files
+    './src/**/*.{html,ts}', // Scan all our HTML and TypeScript files
   ],
   theme: {
     extend: {
@@ -11,5 +11,4 @@ module.exports = {
     },
   },
   plugins: [],
-}
-
+};

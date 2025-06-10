@@ -19,6 +19,7 @@ export class GalacticDataSource extends DataSource<Character> {
   private pageSubject = new BehaviorSubject<number>(1); // Track current page
   private pageSizeSubject = new BehaviorSubject<number>(10); // Track page size
   private sortSubject = new BehaviorSubject<Sort | null>(null); // Track current sort state
+  private searchSubject = new BehaviorSubject<string>(''); // Track current search term
 
   // Public observables that components can subscribe to
   public loading$ = this.loadingSubject.asObservable();
@@ -26,6 +27,7 @@ export class GalacticDataSource extends DataSource<Character> {
   public page$ = this.pageSubject.asObservable();
   public pageSize$ = this.pageSizeSubject.asObservable();
   public sort$ = this.sortSubject.asObservable();
+  public search$ = this.searchSubject.asObservable();
 
   // Track active subscriptions for cleanup
   private subscription = new Subscription();
@@ -53,25 +55,29 @@ export class GalacticDataSource extends DataSource<Character> {
     this.pageSubject.complete();
     this.pageSizeSubject.complete();
     this.sortSubject.complete();
+    this.searchSubject.complete();
     this.subscription.unsubscribe();
   }
 
   /**
-   * Load characters from the API with pagination and sorting
+   * Load characters from the API with pagination, sorting, and search
    * @param page The page number to load (1-based for SWAPI)
    * @param sortField The field to sort by
    * @param sortDirection The direction to sort ('asc' or 'desc')
    * @param pageSize The number of items per page
+   * @param searchTerm The search term to filter by
    */
   loadCharacters(
     page: number = 1,
     sortField: string = '',
     sortDirection: string = '',
-    pageSize: number = this.pageSizeSubject.value
+    pageSize: number = this.pageSizeSubject.value,
+    searchTerm: string = ''
   ): void {
     this.loadingSubject.next(true);
     this.pageSubject.next(page);
     this.pageSizeSubject.next(pageSize);
+    this.searchSubject.next(searchTerm);
 
     // Update sort state
     if (sortField) {
@@ -80,28 +86,50 @@ export class GalacticDataSource extends DataSource<Character> {
 
     // Log the request parameters for debugging
     console.log(
-      `Loading characters: page=${page}, pageSize=${pageSize}, sort=${sortField}, direction=${sortDirection}`
+      `Loading characters: page=${page}, pageSize=${pageSize}, sort=${sortField}, direction=${sortDirection}, search=${searchTerm}`
     );
 
     // Keep previous data visible while loading new data
 
-    const request = this.starWarsService
-      .getCharacters(page, pageSize, sortField, sortDirection)
-      .pipe(finalize(() => this.loadingSubject.next(false)));
+    // Determine if we should use search or regular get based on search term
+    const request = searchTerm
+      ? this.starWarsService.searchCharacters(searchTerm, page, pageSize, sortField, sortDirection)
+      : this.starWarsService.getCharacters(page, pageSize, sortField, sortDirection);
 
-    const subscription = request.subscribe({
+    // Add finalize operator to handle loading state
+    const requestWithLoading = request.pipe(finalize(() => this.loadingSubject.next(false)));
+
+    const subscription = requestWithLoading.subscribe({
       next: response => {
-        // Get character data from response
-        const characters = response.results
-          .map(item => item.properties)
-          .filter((char): char is Character => char !== undefined);
+        // Handle different response structures for search vs regular API calls
+        let characters: Character[] = [];
+        let totalCount = 0;
+
+        if ('result' in response && Array.isArray(response.result)) {
+          // Search API response structure
+          characters = response.result
+            .map(item => item.properties)
+            .filter((char): char is Character => char !== undefined);
+
+          // For search results, we just use the length of the results as count
+          totalCount = characters.length;
+          console.log('Search response processed:', { characters, totalCount });
+        } else if ('results' in response && Array.isArray(response.results)) {
+          // Regular API response structure
+          characters = response.results
+            .map(item => item.properties)
+            .filter((char): char is Character => char !== undefined);
+
+          totalCount = response.total_records || 0;
+          console.log('Regular response processed:', { characters, totalCount });
+        }
 
         // Apply client-side sorting if needed
         const sortedCharacters = this.applySorting(characters);
 
         // Update our subjects with the new data
         this.charactersSubject.next(sortedCharacters);
-        this.countSubject.next(response.total_records);
+        this.countSubject.next(totalCount);
       },
       error: error => {
         console.error('Error loading characters:', error);
@@ -194,5 +222,6 @@ export class GalacticDataSource extends DataSource<Character> {
     this.pageSubject.next(1);
     this.pageSizeSubject.next(10); // Reset to default page size
     this.sortSubject.next(null); // Reset sort state
+    this.searchSubject.next(''); // Reset search term
   }
 }
