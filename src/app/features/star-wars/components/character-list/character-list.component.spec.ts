@@ -70,6 +70,9 @@ describe('CharacterListComponent', () => {
     // Component should have loaded characters from the MSW-intercepted API call
     expect(component.characters.length).toBe(1);
     expect(component.characters[0].name).toBe('Luke Skywalker');
+
+    // Verify the DataSource was initialized and used
+    expect(component['dataSource']).toBeTruthy();
   });
 
   it('should load characters for page 2', async () => {
@@ -126,8 +129,8 @@ describe('CharacterListComponent', () => {
       })
     );
 
-    // Skip ngOnInit and directly call loadCharacters with page 2
-    component.ngOnInit = () => {}; // Prevent auto-loading on init
+    // Initialize component manually
+    component.ngOnInit();
     fixture.detectChanges();
 
     // Directly call the loadCharacters method with page 2
@@ -142,5 +145,32 @@ describe('CharacterListComponent', () => {
     // Verify results
     expect(component.characters.length).toBe(1);
     expect(component.characters[0].name).toBe('Darth Vader');
+  });
+
+  it('should handle loading state changes', async () => {
+    // Create a spy on the dataSource loading$ observable
+    const loadingSpy = jest.fn();
+    component['dataSource'].loading$.subscribe(loadingSpy);
+
+    // Trigger loading
+    component.loadCharacters();
+
+    // Wait for async operations
+    await fixture.whenStable();
+
+    // Should have seen loading state change to true and then back to false
+    expect(loadingSpy).toHaveBeenCalledWith(true);
+    expect(loadingSpy).toHaveBeenCalledWith(false);
+  });
+
+  it('should clean up subscriptions on destroy', () => {
+    // Create spy on subscription unsubscribe
+    const unsubscribeSpy = jest.spyOn(component['subscription'], 'unsubscribe');
+
+    // Trigger ngOnDestroy
+    component.ngOnDestroy();
+
+    // Verify unsubscribe was called
+    expect(unsubscribeSpy).toHaveBeenCalled();
   });
 });

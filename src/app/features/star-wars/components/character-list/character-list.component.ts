@@ -1,11 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { StarWarsService } from '../../../../core/services/star-wars.service';
 import { Character } from '../../../../models/character.model';
-import { catchError, finalize, map, of } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { GalacticDataSource } from '../../datasources/galactic-datasource';
 
 @Component({
   selector: 'app-character-list',
@@ -76,61 +77,63 @@ import { catchError, finalize, map, of } from 'rxjs';
   `,
   styles: [],
 })
-export class CharacterListComponent implements OnInit {
+export class CharacterListComponent implements OnInit, OnDestroy {
   characters: Character[] = [];
   currentPage = 1;
   hasNextPage = false;
   loading = false;
   error = '';
+  totalCount = 0;
 
   private starWarsService = inject(StarWarsService);
+  private dataSource!: GalacticDataSource; // Using definite assignment assertion
+  private subscription = new Subscription();
 
   ngOnInit(): void {
+    // Initialize the DataSource
+    this.dataSource = new GalacticDataSource(this.starWarsService);
+
+    // Subscribe to the DataSource's connect() observable
+    this.subscription.add(
+      this.dataSource.connect().subscribe(characters => {
+        this.characters = characters;
+      })
+    );
+
+    // Subscribe to loading state
+    this.subscription.add(
+      this.dataSource.loading$.subscribe(isLoading => {
+        this.loading = isLoading;
+      })
+    );
+
+    // Subscribe to count
+    this.subscription.add(
+      this.dataSource.count$.subscribe(count => {
+        this.totalCount = count;
+        // Assume we have next page if we haven't loaded all records
+        this.hasNextPage = this.characters.length < this.totalCount;
+      })
+    );
+
+    // Initial data load
     this.loadCharacters();
   }
 
+  ngOnDestroy(): void {
+    // Clean up subscriptions when the component is destroyed
+    this.subscription.unsubscribe();
+    // The DataSource will handle its own cleanup in disconnect()
+  }
+
   loadCharacters(): void {
-    this.loading = true;
     this.error = '';
-
-    this.starWarsService
-      .getCharacters(this.currentPage)
-      .pipe(
-        catchError((error: Error) => {
-          this.error = `Failed to load characters: ${error.message}. The Cosmic Compiler is displeased.`;
-          return of({
-            message: 'error',
-            results: [],
-            total_records: 0,
-            total_pages: 0,
-            next: null,
-            previous: null,
-          });
-        }),
-        map(response => {
-          // Extract next page number from the next URL if it exists
-          if (response.next) {
-            const nextUrl = new URL(response.next);
-            const nextPage = nextUrl.searchParams.get('page');
-            if (nextPage) {
-              this.currentPage = parseInt(nextPage) - 1; // Store the current page (next page - 1)
-            }
-          }
-
-          this.hasNextPage = !!response.next;
-
-          // With expanded=true, each result directly contains properties
-          return response.results
-            .map(item => item.properties)
-            .filter((char): char is Character => char !== undefined);
-        }),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe(characters => {
-        if (characters.length > 0) {
-          this.characters = [...this.characters, ...characters];
-        }
-      });
+    try {
+      // Let the DataSource handle loading the data
+      this.dataSource.loadCharacters(this.currentPage);
+    } catch (error) {
+      this.error = `Failed to load characters: ${error instanceof Error ? error.message : 'Unknown error'}. The Cosmic Compiler is displeased.`;
+    }
   }
 
   loadNextPage(): void {
