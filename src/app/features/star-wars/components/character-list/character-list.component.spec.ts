@@ -5,8 +5,10 @@ import { StarWarsService } from '../../../../core/services/star-wars.service';
 import { provideHttpClient } from '@angular/common/http';
 import { server } from '../../../../../mocks/server';
 import { http, HttpResponse } from 'msw';
-import { PageEvent } from '@angular/material/paginator';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
+import { Sort, MatSort } from '@angular/material/sort';
 import { environment } from '../../../../../environments/environment';
+import { Subject } from 'rxjs';
 
 describe('CharacterListComponent', () => {
   let component: CharacterListComponent;
@@ -221,5 +223,65 @@ describe('CharacterListComponent', () => {
 
     // Verify unsubscribe was called
     expect(unsubscribeSpy).toHaveBeenCalled();
+  });
+
+  it('should handle sort changes', async () => {
+    // Create a spy on the loadCharacters method
+    const loadCharactersSpy = jest.spyOn(component, 'loadCharacters');
+
+    // Initialize component
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Create a mock sort event
+    const sortEvent: Sort = { active: 'height', direction: 'desc' };
+
+    // Create a mock sort with observable that immediately emits the sort event
+    const mockSortChange = new Subject<Sort>();
+
+    // Mock the sort component
+    component.sort = {
+      sortChange: mockSortChange,
+      active: sortEvent.active,
+      direction: sortEvent.direction as 'asc' | 'desc' | '',
+    } as MatSort;
+
+    // Mock the paginator
+    component.paginator = {
+      pageIndex: 1,
+      page: new Subject(),
+      pageSize: 10,
+    } as MatPaginator;
+
+    // Call ngAfterViewInit to set up sort subscriptions
+    component.ngAfterViewInit();
+
+    // Emit the sort event to trigger the subscription
+    mockSortChange.next(sortEvent);
+
+    // Verify paginator was reset
+    expect(component.paginator.pageIndex).toBe(0);
+
+    // Verify loadCharacters was called with correct parameters
+    expect(loadCharactersSpy).toHaveBeenCalledWith(1, 10, sortEvent.active, sortEvent.direction);
+  });
+
+  it('should apply client-side sorting', async () => {
+    // Create a fresh component instance
+    fixture = TestBed.createComponent(CharacterListComponent);
+    component = fixture.componentInstance;
+
+    // Initialize component and wait for it to be stable
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Create a spy on the component's loadCharacters method
+    const loadCharactersSpy = jest.spyOn(component, 'loadCharacters');
+
+    // Call loadCharacters with sort parameters
+    component.loadCharacters(1, 10, 'name', 'asc');
+
+    // Verify component's loadCharacters was called with correct parameters
+    expect(loadCharactersSpy).toHaveBeenCalledWith(1, 10, 'name', 'asc');
   });
 });

@@ -101,12 +101,38 @@ export const handlers = [
       });
     }
 
+    // Get sort parameters if they exist
+    const sortField = url.searchParams.get('sort_by');
+    const sortDirection = url.searchParams.get('sort_direction');
+
+    // Sort the characters if sort parameters are provided
+    const sortedCharacters = [...characters];
+    if (sortField && sortDirection) {
+      sortedCharacters.sort((a, b) => {
+        // Use type assertion to handle property access
+        const aValue = a.properties[sortField as keyof typeof a.properties];
+        const bValue = b.properties[sortField as keyof typeof b.properties];
+
+        // Handle numeric sorting
+        if (!isNaN(Number(aValue)) && !isNaN(Number(bValue))) {
+          return sortDirection === 'asc'
+            ? Number(aValue) - Number(bValue)
+            : Number(bValue) - Number(aValue);
+        }
+
+        // Handle string sorting
+        return sortDirection === 'asc'
+          ? String(aValue).localeCompare(String(bValue))
+          : String(bValue).localeCompare(String(aValue));
+      });
+    }
+
     // Calculate pagination for normal requests
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = startIndex + limitNum;
-    const paginatedResults = characters.slice(startIndex, endIndex);
+    const paginatedResults = sortedCharacters.slice(startIndex, endIndex);
 
     // The Cosmic Compiler appreciates realistic mock responses
     return HttpResponse.json({

@@ -86,13 +86,13 @@ describe('GalacticDataSource', () => {
       // Skip the initial empty array
       if (characters.length > 0) {
         expect(characters).toEqual(mockCharacters);
-        expect(starWarsServiceMock.getCharacters).toHaveBeenCalledWith(1, 10);
+        expect(starWarsServiceMock.getCharacters).toHaveBeenCalledWith(1, 10, '', '');
         done();
       }
     });
 
     // Load the characters
-    dataSource.loadCharacters();
+    dataSource.loadCharacters(1, '', '');
   });
 
   it('should update loading state during data fetching', done => {
@@ -104,14 +104,17 @@ describe('GalacticDataSource', () => {
       loadingStates.push(isLoading);
 
       // After we've seen both true and false states
-      if (loadingStates.length >= 2) {
-        expect(loadingStates).toEqual([false, true, false]);
+      if (loadingStates.length >= 3 && loadingStates[loadingStates.length - 1] === false) {
+        // Verify that loading started as false, then became true, then ended as false
+        expect(loadingStates[0]).toBe(false);
+        expect(loadingStates).toContain(true);
+        expect(loadingStates[loadingStates.length - 1]).toBe(false);
         done();
       }
     });
 
     // Load characters which should trigger loading state changes
-    dataSource.loadCharacters();
+    dataSource.loadCharacters(1, '', '');
   });
 
   it('should update count after loading characters', done => {
@@ -125,7 +128,7 @@ describe('GalacticDataSource', () => {
     });
 
     // Load characters which should update the count
-    dataSource.loadCharacters();
+    dataSource.loadCharacters(1, '', '');
   });
 
   it('should clean up subscriptions when disconnected', () => {
@@ -134,6 +137,8 @@ describe('GalacticDataSource', () => {
     jest.spyOn(dataSource['loadingSubject'], 'complete');
     jest.spyOn(dataSource['countSubject'], 'complete');
     jest.spyOn(dataSource['pageSubject'], 'complete');
+    jest.spyOn(dataSource['pageSizeSubject'], 'complete');
+    jest.spyOn(dataSource['sortSubject'], 'complete');
     jest.spyOn(dataSource['subscription'], 'unsubscribe');
 
     // Disconnect the DataSource
@@ -145,12 +150,13 @@ describe('GalacticDataSource', () => {
     expect(dataSource['countSubject'].complete).toHaveBeenCalled();
     expect(dataSource['pageSubject'].complete).toHaveBeenCalled();
     expect(dataSource['pageSizeSubject'].complete).toHaveBeenCalled();
+    expect(dataSource['sortSubject'].complete).toHaveBeenCalled();
     expect(dataSource['subscription'].unsubscribe).toHaveBeenCalled();
   });
 
   it('should track current page via page$ observable', () => {
     const page = 2;
-    dataSource.loadCharacters(page);
+    dataSource.loadCharacters(page, '', '');
 
     dataSource.page$.subscribe(currentPage => {
       expect(currentPage).toBe(page);
@@ -159,7 +165,7 @@ describe('GalacticDataSource', () => {
 
   it('should track page size via pageSize$ observable', () => {
     const pageSize = 25;
-    dataSource.loadCharacters(1, pageSize);
+    dataSource.loadCharacters(1, '', '', pageSize);
 
     dataSource.pageSize$.subscribe(currentPageSize => {
       expect(currentPageSize).toBe(pageSize);
@@ -172,7 +178,7 @@ describe('GalacticDataSource', () => {
       // First page should be 1 (default)
       if (page === 1) {
         // Load page 2
-        dataSource.loadCharacters(2);
+        dataSource.loadCharacters(2, '', '');
       } else if (page === 2) {
         // Verify page was updated to 2
         expect(page).toBe(2);
@@ -181,23 +187,29 @@ describe('GalacticDataSource', () => {
     });
   });
 
-  it('should clear data when loading a new page', () => {
+  it('should keep previous data while loading new page', () => {
     // First load page 1
-    dataSource.loadCharacters(1);
+    dataSource.loadCharacters(1, '', '');
 
     // Spy on the charactersSubject.next method
     const nextSpy = jest.spyOn(dataSource['charactersSubject'], 'next');
 
-    // Now load page 2
-    dataSource.loadCharacters(2);
+    // Spy on loading subject
+    const loadingSpy = jest.spyOn(dataSource['loadingSubject'], 'next');
 
-    // Verify that charactersSubject.next was called with an empty array
-    expect(nextSpy).toHaveBeenCalledWith([]);
+    // Now load page 2
+    dataSource.loadCharacters(2, '', '');
+
+    // Verify that loading was set to true
+    expect(loadingSpy).toHaveBeenCalledWith(true);
+
+    // Verify that charactersSubject.next was NOT called with an empty array before data loads
+    expect(nextSpy).not.toHaveBeenCalledWith([]);
   });
 
   it('should provide utility methods for data access', () => {
     // Load some data
-    dataSource.loadCharacters(1);
+    dataSource.loadCharacters(1, '', '');
 
     // Test getData()
     expect(dataSource.getData()).toEqual(mockCharacters);

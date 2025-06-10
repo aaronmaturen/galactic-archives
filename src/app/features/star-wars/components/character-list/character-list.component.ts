@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import { merge } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { StarWarsService } from '../../../../core/services/star-wars.service';
 import { Character } from '../../../../models/character.model';
 import { Subscription } from 'rxjs';
@@ -17,6 +20,7 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
     MatTableModule,
     MatProgressSpinnerModule,
     MatPaginatorModule,
+    MatSortModule,
     MatIconModule,
   ],
   template: `
@@ -40,12 +44,29 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
       </div>
 
       <!-- Table container with Star Wars theme -->
-      <div class="tw-bg-white tw-rounded-lg tw-overflow-hidden tw-shadow-lg">
+      <div class="tw-bg-white tw-rounded-lg tw-overflow-hidden tw-shadow-lg tw-relative">
+        <!-- Loading overlay -->
+        <div
+          *ngIf="loading && characters.length"
+          data-testid="loading-overlay"
+          class="tw-absolute tw-inset-0 tw-bg-black tw-bg-opacity-30 tw-z-10 tw-flex tw-items-center tw-justify-center"
+        >
+          <mat-spinner diameter="50" class="tw-text-yellow-400"></mat-spinner>
+        </div>
+
         <!-- The MatTable with our DataSource -->
-        <table mat-table [dataSource]="dataSource" class="tw-w-full" data-testid="character-table">
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          class="tw-w-full"
+          [class.tw-opacity-50]="loading && characters.length"
+          data-testid="character-table"
+          [attr.data-state]="loading && characters.length ? 'dimmed' : 'normal'"
+        >
           <!-- Name Column -->
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef class="tw-text-blue-700">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-blue-700">
               <div class="tw-flex tw-items-center">
                 <mat-icon class="tw-mr-1 tw-text-base tw-text-blue-700">person</mat-icon>
                 <span>NAME</span>
@@ -63,7 +84,7 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
 
           <!-- Gender Column -->
           <ng-container matColumnDef="gender">
-            <th mat-header-cell *matHeaderCellDef class="tw-text-blue-700">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-blue-700">
               <div class="tw-flex tw-items-center">
                 <mat-icon class="tw-mr-1 tw-text-base tw-text-blue-700">wc</mat-icon>
                 <span>GENDER</span>
@@ -74,7 +95,7 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
 
           <!-- Birth Year Column -->
           <ng-container matColumnDef="birth_year">
-            <th mat-header-cell *matHeaderCellDef class="tw-text-blue-700">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-blue-700">
               <div class="tw-flex tw-items-center">
                 <mat-icon class="tw-mr-1 tw-text-base tw-text-blue-700">cake</mat-icon>
                 <span>BIRTH YEAR</span>
@@ -85,7 +106,7 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
 
           <!-- Height Column -->
           <ng-container matColumnDef="height">
-            <th mat-header-cell *matHeaderCellDef class="tw-text-blue-700">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-blue-700">
               <div class="tw-flex tw-items-center">
                 <mat-icon class="tw-mr-1 tw-text-base tw-text-blue-700">height</mat-icon>
                 <span>HEIGHT</span>
@@ -110,11 +131,6 @@ import { GalacticDataSource } from '../../datasources/galactic-datasource';
             </td>
           </tr>
         </table>
-
-        <!-- Loading indicator for when data is loading but we have existing data -->
-        <div *ngIf="loading && characters.length" class="tw-flex tw-justify-center tw-py-4">
-          <mat-spinner diameter="30"></mat-spinner>
-        </div>
 
         <!-- Paginator with Star Wars theme -->
         <mat-paginator
@@ -160,8 +176,9 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
   error = '';
   totalCount = 0;
 
-  // Reference to the paginator in our template
+  // References to the paginator and sort in our template
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   // Services and DataSource
   private starWarsService = inject(StarWarsService);
@@ -198,15 +215,31 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   ngAfterViewInit(): void {
-    // Connect paginator to our datasource after view init
-    if (this.paginator) {
-      // Handle paginator events
+    // Connect paginator and sort to our datasource after view init
+    if (this.paginator && this.sort) {
+      // Reset to first page when sort changes
       this.subscription.add(
-        this.paginator.page.subscribe(event => {
-          // Convert from 0-based to 1-based pagination for the API
-          const apiPage = event.pageIndex + 1;
-          this.loadCharacters(apiPage, event.pageSize);
+        this.sort.sortChange.subscribe(() => {
+          if (this.paginator) {
+            this.paginator.pageIndex = 0;
+          }
         })
+      );
+
+      // Merge sort and paginator events to reload data
+      this.subscription.add(
+        merge(this.sort.sortChange, this.paginator.page)
+          .pipe(
+            tap(() =>
+              this.loadCharacters(
+                this.paginator.pageIndex + 1,
+                this.paginator.pageSize,
+                this.sort.active,
+                this.sort.direction
+              )
+            )
+          )
+          .subscribe()
       );
     }
   }
@@ -217,13 +250,18 @@ export class CharacterListComponent implements OnInit, AfterViewInit, OnDestroy 
     // The DataSource will handle its own cleanup in disconnect()
   }
 
-  loadCharacters(page: number = 1, pageSize: number = this.pageSize): void {
+  loadCharacters(
+    page: number = 1,
+    pageSize: number = this.pageSize,
+    sortField: string = '',
+    sortDirection: string = ''
+  ): void {
     this.error = '';
     try {
       // Update the page size if it changed
       this.pageSize = pageSize;
-      // Let the DataSource handle loading the data
-      this.dataSource.loadCharacters(page, pageSize);
+      // Let the DataSource handle loading the data with sort parameters
+      this.dataSource.loadCharacters(page, sortField, sortDirection, pageSize);
     } catch (error) {
       this.error = `Failed to load characters: ${error instanceof Error ? error.message : 'Unknown error'}. The Cosmic Compiler is displeased.`;
     }

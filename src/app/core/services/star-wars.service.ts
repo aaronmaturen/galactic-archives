@@ -17,10 +17,21 @@ export class StarWarsService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  // Fetch all characters with optional pagination
-  getCharacters(page = 1, pageSize = 10): Observable<CharacterResponse> {
-    // The Cosmic Compiler demands proper URL formatting
-    const url = `${this.apiUrl}people?page=${page}&limit=${pageSize}&expanded=true`;
+  // Fetch all characters with optional pagination and sorting
+  getCharacters(
+    page = 1,
+    pageSize = 10,
+    sortField = '',
+    sortDirection = ''
+  ): Observable<CharacterResponse> {
+    // Build the URL with pagination and optional sorting parameters
+    let url = `${this.apiUrl}people?page=${page}&limit=${pageSize}&expanded=true`;
+
+    // Add sorting parameters if provided
+    if (sortField && sortDirection) {
+      url += `&sort_by=${sortField}&sort_direction=${sortDirection}`;
+    }
+
     console.log(`API Request URL: ${url}`);
 
     return this.http.get<CharacterResponse>(url).pipe(
