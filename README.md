@@ -1,5 +1,8 @@
 # Galactic Archives
 
+![CI](https://github.com/aaronmaturen/galactic-archives/workflows/CI/badge.svg)
+![Deploy](https://github.com/aaronmaturen/galactic-archives/workflows/Deploy%20to%20GitHub%20Pages/badge.svg)
+
 A Star Wars character database built with Angular, showcasing advanced DataSource implementation with pagination, sorting, and (coming soon) filtering capabilities.
 
 ## Features
@@ -53,18 +56,25 @@ Run `ng test` to execute the unit tests via [Jest](https://jestjs.io).
 This project uses Playwright for end-to-end testing. Run the following commands to execute the tests:
 
 ```bash
-# Run all tests in headless mode
-npx playwright test
-
-# Run specific test file
-npx playwright test e2e/sorting.spec.ts
-
-# Run tests with UI mode
-npx playwright test --ui
-
-# Run tests in a specific browser
-npx playwright test --project=chromium
+# Run all tests with minimal output
+npx playwright test --reporter=list --quiet
 ```
+
+## CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **CI Workflow**: Runs on every push and pull request to the main branch
+
+  - Linting with ESLint and Prettier
+  - Unit tests with Jest
+  - E2E tests with Playwright
+  - Build verification
+
+- **Deployment Workflow**: Automatically deploys to GitHub Pages when changes are pushed to the main branch
+  - Builds with production configuration
+  - Deploys to the gh-pages branch
+  - Live site: https://aaronmaturen.github.io/galactic-archives/
 
 The e2e tests verify core functionality including navigation, character list display, pagination, and sorting.
 
