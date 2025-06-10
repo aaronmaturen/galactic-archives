@@ -54,7 +54,9 @@ describe('GalacticDataSource', () => {
     } as unknown as jest.Mocked<StarWarsService>;
 
     // Configure the mock to return our test data
-    starWarsServiceMock.getCharacters.mockReturnValue(of(mockApiResponse));
+    starWarsServiceMock.getCharacters.mockImplementation(() => {
+      return of(mockApiResponse);
+    });
 
     // Create the DataSource with the mock service
     dataSource = new GalacticDataSource(starWarsServiceMock);
@@ -84,7 +86,7 @@ describe('GalacticDataSource', () => {
       // Skip the initial empty array
       if (characters.length > 0) {
         expect(characters).toEqual(mockCharacters);
-        expect(starWarsServiceMock.getCharacters).toHaveBeenCalledWith(1);
+        expect(starWarsServiceMock.getCharacters).toHaveBeenCalledWith(1, 10);
         done();
       }
     });
@@ -131,6 +133,7 @@ describe('GalacticDataSource', () => {
     jest.spyOn(dataSource['charactersSubject'], 'complete');
     jest.spyOn(dataSource['loadingSubject'], 'complete');
     jest.spyOn(dataSource['countSubject'], 'complete');
+    jest.spyOn(dataSource['pageSubject'], 'complete');
     jest.spyOn(dataSource['subscription'], 'unsubscribe');
 
     // Disconnect the DataSource
@@ -140,6 +143,71 @@ describe('GalacticDataSource', () => {
     expect(dataSource['charactersSubject'].complete).toHaveBeenCalled();
     expect(dataSource['loadingSubject'].complete).toHaveBeenCalled();
     expect(dataSource['countSubject'].complete).toHaveBeenCalled();
+    expect(dataSource['pageSubject'].complete).toHaveBeenCalled();
+    expect(dataSource['pageSizeSubject'].complete).toHaveBeenCalled();
     expect(dataSource['subscription'].unsubscribe).toHaveBeenCalled();
+  });
+
+  it('should track current page via page$ observable', () => {
+    const page = 2;
+    dataSource.loadCharacters(page);
+
+    dataSource.page$.subscribe(currentPage => {
+      expect(currentPage).toBe(page);
+    });
+  });
+
+  it('should track page size via pageSize$ observable', () => {
+    const pageSize = 25;
+    dataSource.loadCharacters(1, pageSize);
+
+    dataSource.pageSize$.subscribe(currentPageSize => {
+      expect(currentPageSize).toBe(pageSize);
+    });
+  });
+
+  it('should track current page', done => {
+    // Subscribe to page$ observable
+    dataSource.page$.subscribe(page => {
+      // First page should be 1 (default)
+      if (page === 1) {
+        // Load page 2
+        dataSource.loadCharacters(2);
+      } else if (page === 2) {
+        // Verify page was updated to 2
+        expect(page).toBe(2);
+        done();
+      }
+    });
+  });
+
+  it('should clear data when loading a new page', () => {
+    // First load page 1
+    dataSource.loadCharacters(1);
+
+    // Spy on the charactersSubject.next method
+    const nextSpy = jest.spyOn(dataSource['charactersSubject'], 'next');
+
+    // Now load page 2
+    dataSource.loadCharacters(2);
+
+    // Verify that charactersSubject.next was called with an empty array
+    expect(nextSpy).toHaveBeenCalledWith([]);
+  });
+
+  it('should provide utility methods for data access', () => {
+    // Load some data
+    dataSource.loadCharacters(1);
+
+    // Test getData()
+    expect(dataSource.getData()).toEqual(mockCharacters);
+
+    // Test getCurrentPage()
+    expect(dataSource.getCurrentPage()).toBe(1);
+
+    // Test clear()
+    dataSource.clear();
+    expect(dataSource.getData()).toEqual([]);
+    expect(dataSource.getCurrentPage()).toBe(1);
   });
 });

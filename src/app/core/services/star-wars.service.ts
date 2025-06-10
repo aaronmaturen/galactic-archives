@@ -18,14 +18,15 @@ export class StarWarsService {
   private http = inject(HttpClient);
 
   // Fetch all characters with optional pagination
-  getCharacters(page = 1): Observable<CharacterResponse> {
+  getCharacters(page = 1, pageSize = 10): Observable<CharacterResponse> {
     // The Cosmic Compiler demands proper URL formatting
-    return this.http
-      .get<CharacterResponse>(`${this.apiUrl}people?page=${page}&limit=10&expanded=true`)
-      .pipe(
-        retry(2), // The Cosmic Compiler suggests retrying failed requests
-        catchError(this.handleError)
-      );
+    const url = `${this.apiUrl}people?page=${page}&limit=${pageSize}&expanded=true`;
+    console.log(`API Request URL: ${url}`);
+
+    return this.http.get<CharacterResponse>(url).pipe(
+      retry(2), // The Cosmic Compiler suggests retrying failed requests
+      catchError(this.handleError)
+    );
   }
 
   // Fetch a specific character by ID
