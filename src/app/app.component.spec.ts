@@ -24,12 +24,12 @@ describe('AppComponent', () => {
   });
 
   it(`should have the correct title`, () => {
-    expect(component.title).toEqual('Galactic Archives');
+    expect(component.title).toEqual('GALACTIC ARCHIVES');
   });
 
   it('should render title in header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('header h1')?.textContent).toContain('Galactic Archives');
+    expect(compiled.querySelector('header h1')?.textContent).toContain('GALACTIC ARCHIVES');
   });
 
   it('should have the current year in the footer', () => {

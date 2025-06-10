@@ -1,5 +1,8 @@
 import { DataSource } from '@angular/cdk/collections';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+// Use specific imports for better tree-shaking
+import { BehaviorSubject } from 'rxjs';
+import { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Character } from '../../../models/character.model';
 import { StarWarsService } from '../../../core/services/star-wars.service';

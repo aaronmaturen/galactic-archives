@@ -1,47 +1,16 @@
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
-@use '@angular/material' as mat;
-// Plus imports for other components in your app.
-
-// Include the common styles for Angular Material. We include this here so that you only
-// have to load a single css file for Angular Material in your app.
-// Be sure that you only ever include this mixin once!
-@include mat.core();
-
-// Define the theme object.
-$galactic-archives-theme: mat.define-theme(
-  (
-    color: (
-      theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    density: (
-      scale: 0,
-    ),
-  )
-);
-
-// Include theme styles for core and each component used in your app.
-// Alternatively, you can import and @include the theme mixins for each component
-// that you are using.
-:root {
-  @include mat.all-component-themes($galactic-archives-theme);
-}
-
-// Comment out the line below if you want to use the pre-defined typography utility classes.
-// For more information: https://material.angular.io/guide/typography#using-typography-styles-in-your-application.
-// @include mat.typography-hierarchy($galactic-archives-theme);
-
-// Comment out the line below if you want to use the deprecated `color` inputs.
-// @include mat.color-variants-backwards-compatibility($galactic-archives-theme);
 /* You can add global styles to this file, and also import other style files */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Angular Material theme */
+@import '@angular/material/prebuilt-themes/pink-bluegrey.css';
+/* Import Star Wars themed fonts with optimized loading - combined into one request */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@400;700&family=Space+Mono:wght@400&display=swap');
 
-/* The Ancient Order of Angular recommends keeping global styles minimal */
-/* Most styling should be component-specific or utility-based */
+/* Tailwind CSS directives - these are processed by the Tailwind compiler */
+/* stylelint-disable-next-line */
+@tailwind base;
+/* stylelint-disable-next-line */
+@tailwind components;
+/* stylelint-disable-next-line */
+@tailwind utilities;
 
 html,
 body {
@@ -49,5 +18,108 @@ body {
 }
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-family: 'Orbitron', 'Exo 2', sans-serif;
+  background-color: #0a0a0a;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Improved focus styles for better accessibility */
+:focus {
+  outline: 2px solid #ffe81f !important;
+  outline-offset: 2px !important;
+}
+
+.tw-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip to main content link for keyboard users */
+.tw-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #ffe81f;
+  color: black;
+  padding: 8px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.tw-skip-link:focus {
+  top: 0;
+}
+
+/* Override Material typography with Orbitron */
+.mat-typography,
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-menu-item,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-tab-header,
+.mat-mdc-tab-group,
+.mat-mdc-paginator,
+.mat-mdc-table,
+.mat-mdc-card-title,
+.mat-mdc-card-subtitle,
+.mat-mdc-dialog-title,
+.mat-mdc-dialog-content,
+.mat-mdc-dialog-actions,
+.mat-mdc-checkbox,
+.mat-mdc-radio-button,
+.mat-mdc-slide-toggle,
+.mat-mdc-slider,
+.mat-mdc-tooltip {
+  font-family: 'Orbitron', 'Exo 2', sans-serif !important;
+}
+
+.mat-mdc-table {
+  background-color: transparent !important;
+}
+
+/* Apply Space Mono font to table cells */
+.mat-mdc-cell,
+td.mat-mdc-cell {
+  font-family: 'Space Mono', monospace !important;
+  letter-spacing: -0.5px;
+}
+
+.mat-mdc-paginator {
+  background-color: rgba(30, 30, 30, 0.7) !important;
+  color: #eee !important;
+}
+
+.mat-mdc-form-field {
+  color: #eee !important;
+}
+
+/* Make Material inputs use Orbitron */
+input.mat-mdc-input-element,
+textarea.mat-mdc-input-element,
+select.mat-mdc-select-value {
+  font-family: 'Orbitron', 'Exo 2', sans-serif !important;
+}
+
+/* Style Material form field labels */
+.mat-mdc-form-field-label {
+  font-family: 'Orbitron', 'Exo 2', sans-serif !important;
+  letter-spacing: 1px;
 }

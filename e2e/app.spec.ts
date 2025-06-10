@@ -6,7 +6,7 @@ test('has title', async ({ page }) => {
   await page.goto('/');
 
   // Wait for the title to be visible
-  await expect(page.locator('h1')).toContainText('Galactic Archives');
+  await expect(page.locator('h1')).toContainText('GALACTIC ARCHIVES');
 });
 
 test('navigates to home page', async ({ page }) => {

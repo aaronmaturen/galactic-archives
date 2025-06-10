@@ -1,29 +1,60 @@
-<div class="tw-flex tw-flex-col tw-min-h-screen">
-  <!-- Header: Command center of our application -->
-  <header class="tw-bg-gray-900 tw-text-white tw-p-4 tw-shadow-md">
-    <div class="tw-container tw-mx-auto tw-flex tw-justify-between tw-items-center">
-      <h1 class="tw-text-xl tw-font-bold">{{ title }}</h1>
-      <nav>
-        <ul class="tw-flex tw-space-x-4">
-          <li><a routerLink="/home" class="tw-text-white tw-hover:text-gray-300">Home</a></li>
-          <li>
-            <a routerLink="/characters" class="tw-text-white tw-hover:text-gray-300">Characters</a>
-          </li>
-        </ul>
-      </nav>
+<header class="tw-bg-black tw-border-b tw-border-yellow-400 tw-py-3" role="banner">
+  <div class="tw-container tw-mx-auto tw-px-4">
+    <div class="tw-flex tw-items-center tw-justify-between">
+      <div class="tw-flex tw-items-center">
+        <mat-icon class="tw-text-yellow-400 tw-mr-2" aria-hidden="true">rocket_launch</mat-icon>
+        <h1 id="main-title" class="tw-text-yellow-400 tw-text-xl tw-font-bold">{{ title }}</h1>
+      </div>
+      <div class="tw-flex tw-items-center">
+        <span class="tw-text-blue-300 tw-text-sm tw-mr-2" aria-label="Security clearance level"
+          >IMPERIAL ACCESS LEVEL: CLASSIFIED</span
+        >
+        <mat-icon class="tw-text-yellow-400 tw-mr-4" aria-hidden="true">stars</mat-icon>
+      </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- Main content area: Where the magic happens -->
-  <main class="tw-container tw-mx-auto tw-flex-grow tw-p-4">
-    <!-- Router outlet: A portal to other dimensions (components) -->
-    <router-outlet></router-outlet>
-  </main>
+<main
+  id="main-content"
+  class="tw-container tw-mx-auto tw-px-4 tw-py-6"
+  role="main"
+  aria-labelledby="main-heading"
+>
+  <router-outlet></router-outlet>
+</main>
 
-  <!-- Footer: Every good application needs a footer -->
-  <footer class="tw-bg-gray-900 tw-text-white tw-p-4 tw-mt-auto">
-    <div class="tw-container tw-mx-auto tw-text-center">
-      <p>© {{ getCurrentYear() }} Galactic Archives | Built with Angular by the Rebel Alliance</p>
+<footer
+  class="tw-bg-black tw-border-t tw-border-yellow-400 tw-py-3 tw-mt-auto tw-fixed tw-bottom-0 tw-left-0 tw-right-0"
+  role="contentinfo"
+>
+  <div class="tw-container tw-mx-auto tw-px-4">
+    <div class="tw-flex tw-items-center tw-justify-between tw-flex-wrap">
+      <div class="tw-flex tw-items-center tw-text-sm tw-text-blue-300">
+        <span>© {{ currentYear }} Galactic Archives</span>
+      </div>
+      <div class="tw-flex tw-items-center tw-gap-6">
+        <a
+          href="https://www.swapi.tech/about"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="tw-text-blue-300 hover:tw-text-yellow-400 tw-text-sm tw-flex tw-items-center tw-gap-1"
+          aria-label="SWAPI Tech About Page"
+        >
+          <mat-icon class="tw-text-yellow-400 tw-text-base">info</mat-icon>
+          <span>SWAPI Tech</span>
+        </a>
+        <a
+          href="https://github.com/aaronmaturen/galactic-archives"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="tw-text-blue-300 hover:tw-text-yellow-400 tw-text-sm tw-flex tw-items-center tw-gap-1"
+          aria-label="GitHub Repository"
+        >
+          <mat-icon class="tw-text-yellow-400 tw-text-base">code</mat-icon>
+          <span>GitHub</span>
+        </a>
+      </div>
     </div>
-  </footer>
-</div>
+  </div>
+</footer>

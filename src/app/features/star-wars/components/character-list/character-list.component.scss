@@ -1,0 +1,48 @@
+:host ::ng-deep {
+  .mat-mdc-paginator {
+    background-color: transparent;
+  }
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: var(--star-wars-blue);
+  }
+
+  .mat-mdc-paginator-icon {
+    fill: var(--star-wars-yellow);
+  }
+
+  .mat-mdc-select-value-text {
+    color: var(--star-wars-yellow);
+  }
+
+  .mat-mdc-select-arrow {
+    color: var(--star-wars-yellow);
+  }
+}
+
+.mat-mdc-row:nth-child(even) {
+  background-color: rgba(20, 20, 20, 0.3);
+}
+
+.mat-mdc-row:hover {
+  background-color: rgba(50, 50, 50, 0.5);
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  padding: 12px 16px;
+  border-bottom: none;
+}
+
+.mat-mdc-header-cell {
+  background-color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  color: var(--star-wars-yellow);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.mat-mdc-cell {
+  color: var(--star-wars-blue);
+}

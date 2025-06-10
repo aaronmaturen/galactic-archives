@@ -1,0 +1,239 @@
+<div class="tw-mb-6">
+  <div class="tw-flex tw-items-center tw-mb-4">
+    <div
+      class="tw-w-8 tw-h-8 tw-bg-yellow-400 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mr-3"
+      aria-hidden="true"
+    >
+      <mat-icon class="tw-text-black">people</mat-icon>
+    </div>
+    <h1
+      class="tw-text-2xl tw-text-yellow-400 tw-mb-0 tw-tracking-widest"
+      id="database-title"
+      data-testid="character-list-heading"
+    >
+      GALACTIC PERSONNEL DATABASE
+    </h1>
+  </div>
+  <div class="tw-flex tw-items-center tw-mb-1 tw-text-xs tw-text-blue-300" aria-live="polite">
+    <span class="tw-tracking-wider">IMPERIAL SECURITY CLEARANCE REQUIRED</span>
+    <span class="tw-flex-1"></span>
+    <span class="tw-tracking-wider">SYSTEM ID: SW-{{ dataSource.count$ | async }}-X</span>
+  </div>
+
+  <!-- Search input with debounce -->
+  <div class="tw-mb-4 tw-border tw-border-blue-300 tw-rounded tw-p-2 tw-bg-gray-900">
+    <div class="tw-flex tw-items-center">
+      <mat-icon class="tw-mr-2 tw-text-yellow-400">search</mat-icon>
+      <input
+        class="tw-bg-transparent tw-border-none tw-outline-none tw-text-blue-300 tw-w-full"
+        [formControl]="searchControl"
+        placeholder="ENTER SEARCH PARAMETERS"
+        aria-label="Search characters"
+        data-testid="search-input"
+      />
+      <button
+        *ngIf="searchControl.value"
+        mat-icon-button
+        aria-label="Clear search"
+        (click)="clearSearch()"
+        data-testid="clear-search-button"
+        class="tw-text-yellow-400"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen reader announcements -->
+  <div aria-live="polite" class="tw-sr-only">
+    <span *ngIf="dataSource.loading$ | async">Loading galactic personnel data. Please wait.</span>
+    <span *ngIf="(dataSource.loading$ | async) === false && (dataSource.count$ | async) === 0"
+      >No personnel records found matching your search criteria.</span
+    >
+    <span *ngIf="(dataSource.loading$ | async) === false && ((dataSource.count$ | async) ?? 0) > 0"
+      >{{ dataSource.count$ | async }} personnel records found.</span
+    >
+  </div>
+
+  <!-- Error message display
+  <div
+    *ngIf="error"
+    data-testid="error-message"
+    class="tw-bg-sith-red tw-bg-opacity-20 tw-border-l-4 tw-border-sith-red tw-text-sith-red tw-p-4 tw-mb-4 tw-rounded"
+  >
+    <div class="tw-flex tw-items-center">
+      <mat-icon class="tw-mr-2 tw-text-sith-red">error</mat-icon>
+      <span class="tw-font-bold">IMPERIAL ALERT:</span>
+      <span class="tw-ml-2">{{ error }}</span>
+    </div>
+  </div> -->
+
+  <!-- Table container with Star Wars theme -->
+  <div
+    class="tw-relative tw-border tw-border-yellow-400 tw-rounded-md tw-overflow-hidden tw-min-h-[400px]"
+    #tableContainer
+  >
+    <!-- The MatTable with our DataSource -->
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      matSort
+      class="tw-w-full tw-bg-gray-900 tw-shadow-md"
+      [class.tw-opacity-50]="loading && characters.length"
+      data-testid="character-table"
+      [attr.data-state]="loading && characters.length ? 'dimmed' : 'normal'"
+    >
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          class="tw-text-yellow-400"
+          scope="col"
+        >
+          <div class="tw-flex tw-items-center">
+            <mat-icon class="tw-mr-1 tw-text-base tw-text-yellow-400" aria-hidden="true"
+              >person</mat-icon
+            >
+            <span>NAME</span>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let character"
+          class="tw-text-yellow-400 tw-font-medium"
+          data-testid="character-name"
+        >
+          {{ character.name }}
+        </td>
+      </ng-container>
+
+      <!-- Gender Column -->
+      <ng-container matColumnDef="gender">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          class="tw-text-yellow-400"
+          scope="col"
+        >
+          <div class="tw-flex tw-items-center">
+            <mat-icon class="tw-mr-1 tw-text-base tw-text-yellow-400" aria-hidden="true"
+              >wc</mat-icon
+            >
+            <span>GENDER</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let character" class="tw-text-blue-300">
+          {{ character.gender }}
+        </td>
+      </ng-container>
+
+      <!-- Birth Year Column -->
+      <ng-container matColumnDef="birth_year">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-yellow-400">
+          <div class="tw-flex tw-items-center">
+            <mat-icon class="tw-mr-1 tw-text-base tw-text-yellow-400" aria-hidden="true"
+              >cake</mat-icon
+            >
+            <span>BIRTH YEAR</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let character" class="tw-text-blue-300">
+          {{ character.birth_year }}
+        </td>
+      </ng-container>
+
+      <!-- Height Column -->
+      <ng-container matColumnDef="height">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="tw-text-yellow-400">
+          <div class="tw-flex tw-items-center">
+            <mat-icon class="tw-mr-1 tw-text-base tw-text-yellow-400" aria-hidden="true"
+              >height</mat-icon
+            >
+            <span>HEIGHT</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let character" class="tw-text-blue-300">
+          {{ character.height }}cm
+        </td>
+      </ng-container>
+
+      <!-- Row definitions -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="tw-bg-gray-800"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="tw-border-b tw-border-gray-700 hover:tw-bg-gray-800 focus:tw-outline focus:tw-outline-2 focus:tw-outline-yellow-400"
+        role="row"
+      ></tr>
+
+      <!-- Row shown when there is no matching data -->
+      <tr class="tw-mat-row" *matNoDataRow>
+        <td class="tw-mat-cell tw-p-4 tw-text-center" colspan="4">
+          <div class="tw-flex tw-flex-col tw-items-center tw-py-8">
+            <mat-icon class="tw-text-4xl tw-text-yellow-400 tw-mb-2">warning</mat-icon>
+            <span class="tw-text-blue-300">These aren't the characters you're looking for</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Paginator with Star Wars theme -->
+    <mat-paginator
+      [length]="dataSource.count$ | async"
+      [pageSize]="10"
+      [pageSizeOptions]="[5, 10, 25, 50]"
+      class="tw-bg-gray-900 tw-text-yellow-400 tw-border-t tw-border-yellow-400"
+      aria-label="Select page of characters"
+    ></mat-paginator>
+
+    <!-- Full table overlay to dim the entire table -->
+    <div
+      class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black tw-bg-opacity-70"
+      *ngIf="dataSource.loading$ | async"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Loading overlay - positioned under the thead -->
+    <div
+      class="tw-absolute tw-left-0 tw-right-0 tw-z-50 tw-flex tw-items-center tw-justify-center tw-py-8"
+      *ngIf="dataSource.loading$ | async"
+      role="status"
+      aria-live="polite"
+      [style.top]="'calc(48px + 5%)'"
+      style="height: auto; min-height: 180px"
+    >
+      <div
+        class="tw-flex tw-flex-col tw-items-center tw-p-6 tw-border-2 tw-border-yellow-400 tw-rounded-lg tw-bg-gray-900 tw-bg-opacity-90 tw-shadow-lg tw-shadow-yellow-400/20"
+      >
+        <div class="tw-flex tw-items-center tw-justify-center tw-mb-3 tw-relative">
+          <div
+            class="tw-animate-ping tw-absolute tw-h-12 tw-w-12 tw-rounded-full tw-bg-yellow-400 tw-opacity-20"
+            aria-hidden="true"
+          ></div>
+          <div
+            class="tw-animate-ping tw-absolute tw-h-16 tw-w-16 tw-rounded-full tw-bg-yellow-400 tw-opacity-10 tw-delay-300"
+            aria-hidden="true"
+          ></div>
+          <mat-spinner color="accent" diameter="50" aria-label="Loading data"></mat-spinner>
+        </div>
+        <p class="tw-text-yellow-400 tw-tracking-widest tw-text-center tw-font-bold tw-text-lg">
+          ACCESSING GALACTIC DATABASE
+        </p>
+        <p class="tw-text-blue-300 tw-text-xs tw-mt-1 tw-text-center">
+          IMPERIAL SECURITY PROTOCOLS ACTIVE
+        </p>
+        <div class="tw-sr-only" aria-live="polite">
+          Loading galactic personnel data. Please wait.
+        </div>
+        <div class="tw-flex tw-justify-center tw-gap-2 tw-mt-3" aria-hidden="true">
+          <div class="tw-w-2 tw-h-2 tw-bg-yellow-400 tw-animate-pulse"></div>
+          <div class="tw-w-2 tw-h-2 tw-bg-yellow-400 tw-animate-pulse tw-delay-150"></div>
+          <div class="tw-w-2 tw-h-2 tw-bg-yellow-400 tw-animate-pulse tw-delay-300"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
