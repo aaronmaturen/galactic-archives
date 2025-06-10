@@ -13,7 +13,9 @@ import { catchError, finalize, map, of } from 'rxjs';
   imports: [CommonModule, MatCardModule, MatProgressSpinnerModule, MatButtonModule],
   template: `
     <div class="tw-container tw-mx-auto tw-p-4">
-      <h1 class="tw-text-2xl tw-font-bold tw-mb-4">Star Wars Characters</h1>
+      <h1 data-testid="character-list-heading" class="tw-text-2xl tw-font-bold tw-mb-4">
+        Star Wars Characters
+      </h1>
 
       <div *ngIf="loading && characters.length === 0" class="tw-flex tw-justify-center tw-my-8">
         <mat-spinner diameter="50"></mat-spinner>
@@ -21,18 +23,23 @@ import { catchError, finalize, map, of } from 'rxjs';
 
       <div
         *ngIf="error"
+        data-testid="error-message"
         class="tw-bg-red-100 tw-border-l-4 tw-border-red-500 tw-text-red-700 tw-p-4 tw-mb-4"
       >
         {{ error }}
       </div>
 
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
+      <div
+        data-testid="character-list"
+        class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4"
+      >
         <mat-card
           *ngFor="let character of characters"
+          data-testid="character-card"
           class="tw-mb-4 tw-transition-all tw-duration-300 tw-hover:tw-shadow-xl"
         >
           <mat-card-header>
-            <mat-card-title>{{ character.name }}</mat-card-title>
+            <mat-card-title data-testid="character-name">{{ character.name }}</mat-card-title>
             <mat-card-subtitle>Birth Year: {{ character.birth_year }}</mat-card-subtitle>
           </mat-card-header>
 

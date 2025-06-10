@@ -2,6 +2,7 @@
 module.exports = {
   preset: 'jest-preset-angular',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
+  testEnvironment: 'jest-fixed-jsdom',
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/dist/',
@@ -15,4 +16,7 @@ module.exports = {
   testMatch: [
     '**/*.spec.ts', // Using .spec.ts for test files
   ],
+  // testEnvironmentOptions: {
+  //   customExportConditions: [''],
+  // },
 };

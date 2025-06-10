@@ -1,5 +1,6 @@
 // e2e/app.spec.ts
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './setup/msw.setup';
 
 test('has title', async ({ page }) => {
   await page.goto('/');
